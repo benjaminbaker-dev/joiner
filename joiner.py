@@ -26,12 +26,12 @@ class Joiner(EventingCommand):
         """
         applies the appropriate update function to each record
         """
-        final_json = {}
         updating_func = type(self)._update_and_overwrite
         if self.should_list:
             updating_func = self._update_and_list
 
         for record in records:
+            final_json = {}
             individual_json_list = record['_raw'].split('\n')
             updating_func(final_json, individual_json_list)
             yield {'_raw': json.dumps(final_json)}
@@ -43,10 +43,6 @@ class Joiner(EventingCommand):
             final_json.update(loaded)
 
     def _update_and_list(self, final_json, individual_json_list):
-        """
-        creates lists when overlapping keys are found to save all values
-        ensures that "id_key" does not result in a list being created
-        """
         for doc in individual_json_list:
             loaded = json.loads(doc)
             for key, value in loaded.items():
