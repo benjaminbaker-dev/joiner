@@ -34,7 +34,8 @@ class Joiner(EventingCommand):
             final_json = {}
             individual_json_list = record['_raw'].split('\n')
             updating_func(final_json, individual_json_list)
-            yield {'_raw': json.dumps(final_json)}
+            record['_raw'] = json.dumps(final_json)
+            yield record
 
     @staticmethod
     def _update_and_overwrite(final_json, individual_json_list):
