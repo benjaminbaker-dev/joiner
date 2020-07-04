@@ -23,40 +23,36 @@ class Joiner(EventingCommand):
             updating_func = self._update_and_list
 
         for record in records:
-            final_json = {}
+            unified_json = {}
             individual_json_list = record['_raw'].split('\n')
-            updating_func(final_json, individual_json_list)
-            record['_raw'] = json.dumps(final_json)
+            updating_func(unified_json, individual_json_list)
+            record['_raw'] = json.dumps(unified_json)
             yield record
 
     @staticmethod
-    def _update_and_overwrite(final_json, individual_json_list):
+    def _update_and_overwrite(unified_json, individual_json_list):
         for doc in individual_json_list:
             loaded = json.loads(doc)
-            final_json.update(loaded)
+            unified_json.update(loaded)  # update function automatically overwrites duplicate keys
 
-    def _update_and_list(self, final_json, individual_json_list):
+    def _update_and_list(self, unified_json, individual_json_list):
         for doc in individual_json_list:
             loaded = json.loads(doc)
             for key, value in loaded.items():
-                existing_value = final_json.get(key)
-                if key in self.fieldnames:
-                    if existing_value:
-                        continue
-                    else:
-                        final_json[key] = value
-
+                existing_value = unified_json.get(key)
+                if key in self.fieldnames and existing_value:  # where self.fieldnames are keys NOT to list
+                    continue
+                elif key in self.fieldnames and not existing_value:
+                    unified_json[key] = value
                 else:
-                    type(self)._do_safe_update(final_json, existing_value, key, value)
+                    type(self)._do_safe_update(unified_json, existing_value, key, value)
 
     @staticmethod
-    def _do_safe_update(final_json, existing_value, key, value):
-        if existing_value and isinstance(existing_value, list):
-            final_json[key].append(value)
-        elif existing_value:
-            final_json[key] = [existing_value, value]
+    def _do_safe_update(unified_json, existing_value, key, value):
+        if existing_value:
+            unified_json[key].append(value)
         else:
-            final_json[key] = value
+            unified_json[key] = [value]
 
 
 dispatch(Joiner)
