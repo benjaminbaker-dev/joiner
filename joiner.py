@@ -14,14 +14,6 @@ class Joiner(EventingCommand):
         validate=validators.Boolean()
     )
 
-    id_key = Option(
-        doc='''
-        if should list is set, this parameter enables you to select the id 
-        field the transaction was done on, so to not create a list
-        ''',
-        default=""
-    )
-
     def transform(self, records):
         """
         applies the appropriate update function to each record
@@ -48,7 +40,7 @@ class Joiner(EventingCommand):
             loaded = json.loads(doc)
             for key, value in loaded.items():
                 existing_value = final_json.get(key)
-                if key == self.id_key:
+                if key in self.fieldnames:
                     if existing_value:
                         continue
                     else:
